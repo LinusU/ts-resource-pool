@@ -9,4 +9,8 @@ declare class ResourcePool<T> {
   use<R> (fn: (resource: T) => R | PromiseLike<R>): Promise<R>
 }
 
+declare namespace ResourcePool {
+  type Factory<T> = ResourceFactory<T>
+}
+
 export = ResourcePool
