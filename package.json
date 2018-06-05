@@ -1,0 +1,37 @@
+{
+  "name": "ts-resource-pool",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": "LinusU/ts-resource-pool",
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "test": "standard && mocha"
+  },
+  "dependencies": {
+    "p-finally": "^1.0.0",
+    "p-try": "^1.0.0"
+  },
+  "devDependencies": {
+    "assert-rejects": "^0.1.1",
+    "mocha": "^5.2.0",
+    "p-sleep": "^1.1.0",
+    "standard": "^11.0.1"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "keywords": [
+    "factory",
+    "optimisation",
+    "performance",
+    "pool",
+    "pooling",
+    "recycle",
+    "resource",
+    "reuse",
+    "throttle"
+  ]
+}
