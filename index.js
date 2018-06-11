@@ -20,13 +20,22 @@ class ResourcePool {
   }
 
   [kAquire] () {
-    if (this[kUsed] < this[kLimit]) {
-      this[kUsed] += 1
-      return pTry(() => this[kFactory].create())
+    if (this[kUsed] >= this[kLimit]) {
+      return new Promise((resolve) => {
+        this[kQueue].push(resolve)
+      })
     }
 
-    return new Promise((resolve) => {
-      this[kQueue].push(resolve)
+    this[kUsed] += 1
+
+    return pTry(() => this[kFactory].create()).catch((err) => {
+      this[kUsed] -= 1
+
+      if (this[kQueue].length) {
+        this[kQueue].shift()(this[kAquire]())
+      }
+
+      throw err
     })
   }
 
