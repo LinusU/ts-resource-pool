@@ -246,4 +246,22 @@ describe('ts-resource-pool', () => {
       assert.deepStrictEqual(events, ['create', 'a', 'recycle', 'b', 'destroy'])
     })
   })
+
+  it('properly cleans up after failed creation', () => {
+    const events = []
+    const error = new Error('YDKETMFVES')
+
+    const create = () => { events.push('create'); throw error }
+    const pool = new ResourcePool({ create })
+
+    const a = pool.use(() => {})
+    const b = pool.use(() => {})
+
+    const ar = assertRejects(a, (err) => (err.message === 'YDKETMFVES'))
+    const br = assertRejects(b, (err) => (err.message === 'YDKETMFVES'))
+
+    return Promise.all([ar, br]).then(() => {
+      assert.deepStrictEqual(events, ['create', 'create'])
+    })
+  })
 })
