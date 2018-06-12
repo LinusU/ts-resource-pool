@@ -33,20 +33,25 @@ describe('ts-resource-pool', () => {
 
     return a.then(() => {
       assert.deepStrictEqual(events, ['create', 'a', 'destroy'])
+    }).then(() => {
+      return pool.use((r) => { assert.strictEqual(r, resource); events.push('b') })
+    }).then(() => {
+      assert.deepStrictEqual(events, ['create', 'a', 'destroy', 'create', 'b', 'destroy'])
     })
   })
 
   it('recycles resources', () => {
     const events = []
     const resource = Symbol('resource')
+    const recycled = Symbol('recycled')
 
     const create = () => { events.push('create'); return resource }
-    const destroy = (r, e) => { assert.strictEqual(r, resource); assert.strictEqual(e, null); events.push('destroy') }
-    const recycle = (r, e) => { assert.strictEqual(r, resource); assert.strictEqual(e, null); events.push('recycle'); return r }
+    const destroy = (r, e) => { assert.strictEqual(r, recycled); assert.strictEqual(e, null); events.push('destroy') }
+    const recycle = (r, e) => { assert.strictEqual(r, resource); assert.strictEqual(e, null); events.push('recycle'); return recycled }
     const pool = new ResourcePool({ create, destroy, recycle })
 
     const a = pool.use((r) => { assert.strictEqual(r, resource); events.push('a') })
-    const b = pool.use((r) => { assert.strictEqual(r, resource); events.push('b') })
+    const b = pool.use((r) => { assert.strictEqual(r, recycled); events.push('b') })
 
     return Promise.all([a, b]).then(() => {
       assert.deepStrictEqual(events, ['create', 'a', 'recycle', 'b', 'destroy'])
@@ -262,6 +267,28 @@ describe('ts-resource-pool', () => {
 
     return Promise.all([ar, br]).then(() => {
       assert.deepStrictEqual(events, ['create', 'create'])
+    })
+  })
+
+  it('properly cleans up after failed recycle', () => {
+    const events = []
+    const resource = Symbol('resource')
+    const error = new Error('YDKETMFVES')
+
+    const create = () => { events.push('create'); return resource }
+    const recycle = (r, e) => { assert.strictEqual(r, resource); assert.strictEqual(e, null); events.push('recycle'); throw error }
+    const pool = new ResourcePool({ create, recycle })
+
+    const a = pool.use(() => { events.push('a') })
+    const b = pool.use(() => { events.push('b') })
+    const c = pool.use(() => { events.push('c') })
+    const d = pool.use(() => { events.push('d') })
+
+    const br = assertRejects(b, (err) => (err.message === 'YDKETMFVES'))
+    const dr = assertRejects(d, (err) => (err.message === 'YDKETMFVES'))
+
+    return Promise.all([a, br, c, dr]).then(() => {
+      assert.deepStrictEqual(events, ['create', 'a', 'recycle', 'create', 'c', 'recycle'])
     })
   })
 })

@@ -5,6 +5,7 @@ const kFactory = Symbol('factory')
 const kLimit = Symbol('limit')
 const kQueue = Symbol('queue')
 const kRelease = Symbol('release')
+const kRevert = Symbol('revert')
 const kUsed = Symbol('used')
 
 class ResourcePool {
@@ -19,6 +20,16 @@ class ResourcePool {
     this[kUsed] = 0
   }
 
+  [kRevert] (err) {
+    this[kUsed] -= 1
+
+    if (this[kQueue].length) {
+      this[kQueue].shift()(this[kAquire]())
+    }
+
+    throw err
+  }
+
   [kAquire] () {
     if (this[kUsed] >= this[kLimit]) {
       return new Promise((resolve) => {
@@ -28,15 +39,7 @@ class ResourcePool {
 
     this[kUsed] += 1
 
-    return pTry(() => this[kFactory].create()).catch((err) => {
-      this[kUsed] -= 1
-
-      if (this[kQueue].length) {
-        this[kQueue].shift()(this[kAquire]())
-      }
-
-      throw err
-    })
+    return pTry(() => this[kFactory].create()).catch((err) => this[kRevert](err))
   }
 
   [kRelease] (resource, error) {
@@ -44,13 +47,15 @@ class ResourcePool {
       const next = this[kQueue].shift()
 
       if (this[kFactory].recycle) {
-        next(pTry(() => this[kFactory].recycle(resource, error)).then(() => resource))
+        next(pTry(() => this[kFactory].recycle(resource, error)).catch((err) => this[kRevert](err)))
       } else {
         next(resource)
       }
 
       return Promise.resolve()
     }
+
+    this[kUsed] -= 1
 
     if (this[kFactory].destroy) {
       return pTry(() => this[kFactory].destroy(resource, error))
