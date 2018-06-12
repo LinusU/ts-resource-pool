@@ -68,7 +68,7 @@ class ResourcePool {
     return Promise.resolve()
   }
 
-  async use (fn) {
+  use (fn) {
     return this[kAquire]().then((resource) => {
       return pTry(() => fn(resource)).then(
         (val) => this[kRelease](resource, null).then(() => { return val }),
