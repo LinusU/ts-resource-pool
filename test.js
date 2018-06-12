@@ -33,6 +33,10 @@ describe('ts-resource-pool', () => {
 
     return a.then(() => {
       assert.deepStrictEqual(events, ['create', 'a', 'destroy'])
+    }).then(() => {
+      return pool.use((r) => { assert.strictEqual(r, resource); events.push('b') })
+    }).then(() => {
+      assert.deepStrictEqual(events, ['create', 'a', 'destroy', 'create', 'b', 'destroy'])
     })
   })
 

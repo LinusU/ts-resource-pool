@@ -55,6 +55,8 @@ class ResourcePool {
       return Promise.resolve()
     }
 
+    this[kUsed] -= 1
+
     if (this[kFactory].destroy) {
       return pTry(() => this[kFactory].destroy(resource, error))
     }
