@@ -39,14 +39,15 @@ describe('ts-resource-pool', () => {
   it('recycles resources', () => {
     const events = []
     const resource = Symbol('resource')
+    const recycled = Symbol('recycled')
 
     const create = () => { events.push('create'); return resource }
-    const destroy = (r, e) => { assert.strictEqual(r, resource); assert.strictEqual(e, null); events.push('destroy') }
-    const recycle = (r, e) => { assert.strictEqual(r, resource); assert.strictEqual(e, null); events.push('recycle'); return r }
+    const destroy = (r, e) => { assert.strictEqual(r, recycled); assert.strictEqual(e, null); events.push('destroy') }
+    const recycle = (r, e) => { assert.strictEqual(r, resource); assert.strictEqual(e, null); events.push('recycle'); return recycled }
     const pool = new ResourcePool({ create, destroy, recycle })
 
     const a = pool.use((r) => { assert.strictEqual(r, resource); events.push('a') })
-    const b = pool.use((r) => { assert.strictEqual(r, resource); events.push('b') })
+    const b = pool.use((r) => { assert.strictEqual(r, recycled); events.push('b') })
 
     return Promise.all([a, b]).then(() => {
       assert.deepStrictEqual(events, ['create', 'a', 'recycle', 'b', 'destroy'])

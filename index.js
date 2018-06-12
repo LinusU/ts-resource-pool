@@ -44,7 +44,7 @@ class ResourcePool {
       const next = this[kQueue].shift()
 
       if (this[kFactory].recycle) {
-        next(pTry(() => this[kFactory].recycle(resource, error)).then(() => resource))
+        next(pTry(() => this[kFactory].recycle(resource, error)))
       } else {
         next(resource)
       }
