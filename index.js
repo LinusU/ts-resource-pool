@@ -10,6 +10,10 @@ const kUsed = Symbol('used')
 
 class ResourcePool {
   constructor (factory, concurrency = 1) {
+    if (typeof concurrency !== 'number') {
+      throw new TypeError(`Expected concurrency to be a number, got ${typeof concurrency}`)
+    }
+
     if (concurrency < 1) {
       throw new Error('concurrency cannot be less than 1')
     }
@@ -64,7 +68,7 @@ class ResourcePool {
     return Promise.resolve()
   }
 
-  async use (fn) {
+  use (fn) {
     return this[kAquire]().then((resource) => {
       return pTry(() => fn(resource)).then(
         (val) => this[kRelease](resource, null).then(() => { return val }),

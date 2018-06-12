@@ -7,6 +7,16 @@ const pSleep = require('p-sleep')
 const ResourcePool = require('./')
 
 describe('ts-resource-pool', () => {
+  it('throws on bad concurrencies', () => {
+    const create = () => 1
+
+    assert.throws(() => new ResourcePool({ create }, 0), Error)
+    assert.throws(() => new ResourcePool({ create }, -1), Error)
+
+    // @ts-ignore
+    assert.throws(() => new ResourcePool({ create }, 'bad'), TypeError)
+  })
+
   it('gives access to a resource', () => {
     const events = []
     const resource = Symbol('resource')
