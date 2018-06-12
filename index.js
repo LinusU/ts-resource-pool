@@ -10,6 +10,10 @@ const kUsed = Symbol('used')
 
 class ResourcePool {
   constructor (factory, concurrency = 1) {
+    if (typeof concurrency !== 'number') {
+      throw new TypeError(`Expected concurrency to be a number, got ${typeof concurrency}`)
+    }
+
     if (concurrency < 1) {
       throw new Error('concurrency cannot be less than 1')
     }
