@@ -18,7 +18,7 @@
     "assert-rejects": "^0.1.1",
     "coveralls": "^3.0.1",
     "mocha": "^5.2.0",
-    "nyc": "^12.0.2",
+    "nyc": "^13.0.1",
     "p-sleep": "^1.1.0",
     "standard": "^11.0.1"
   },
